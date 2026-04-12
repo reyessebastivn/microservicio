@@ -135,4 +135,5 @@ public class ProductoController {
 
         return ResponseEntity.ok(out);
     }
+    // prueba pipeline
 }
