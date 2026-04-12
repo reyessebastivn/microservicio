@@ -89,9 +89,7 @@ public class ProductoController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---------------------------------------------
-    // 🔹 NUEVO: Endpoint de filtrado (categoría + activo)
-    // ---------------------------------------------
+    // NUEVO: Endpoint de filtrado (categoría + activo)
     @Operation(
         summary = "Filtrar productos",
         description = "Filtra por categoría (id o nombre) y por estado activo. Si no envías parámetros, devuelve solo activos."
@@ -135,5 +133,7 @@ public class ProductoController {
 
         return ResponseEntity.ok(out);
     }
+
     // prueba pipeline
+    // segunda feature: Crear producto 
 }
