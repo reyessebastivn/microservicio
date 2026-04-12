@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody; // ✅ SPRING, no Swagger
+import org.springframework.web.bind.annotation.RequestBody; // SPRING, no Swagger
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +20,7 @@ import com.example.ProductosJSS.entities.Usuario;
 import com.example.ProductosJSS.services.UsuarioServicesImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
-// ⛔️ NO importes io.swagger.v3.oas.annotations.parameters.RequestBody
+//  NO importes io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 // Si prefieres @Valid, importa:
@@ -75,7 +75,7 @@ public class UsuarioController {
     @Operation(summary = "Crear un nuevo usuario", description = "Crea un nuevo usuario en la base de datos.")
     @ApiResponse(responseCode = "201", description = "Usuario creado correctamente")
     @PostMapping
-    public ResponseEntity<UsuarioDTO> crear(@RequestBody @Valid Usuario u) { // ✅ sigue siendo JSON; dispara validaciones
+    public ResponseEntity<UsuarioDTO> crear(@RequestBody @Valid Usuario u) { // sigue siendo JSON; dispara validaciones
         Usuario nuevo = usuarioService.crear(u);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDto(nuevo));
     }
@@ -100,4 +100,6 @@ public class UsuarioController {
         Usuario u = usuarioService.desactivar(id);
         return ResponseEntity.ok(toDto(u));
     }
+
+    
 }
