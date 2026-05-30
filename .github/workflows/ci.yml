@@ -1,0 +1,39 @@
+name: DevOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-test-security:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ProductosJSS
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Ejecutar pruebas unitarias
+        run: mvn clean test
+
+      - name: Generar cobertura JaCoCo
+        run: mvn jacoco:report
+
+      - name: Análisis SCA (Dependencias)
+        run: mvn dependency:tree
+
+      - name: Empaquetar aplicación
+        run: mvn package -DskipTests
