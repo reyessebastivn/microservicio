@@ -1,0 +1,19 @@
+version: 2
+
+updates:
+  # Revisar dependencias de Maven semanalmente
+  - package-ecosystem: "maven"
+    directory: "/ProductosJSS"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+
+  # Revisar las versiones de las GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"

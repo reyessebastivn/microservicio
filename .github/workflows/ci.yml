@@ -1,4 +1,4 @@
-name: DevOps CI/CD Pipeline
+name: CI/CD Pipeline - ProductosJSS
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - main
 
 jobs:
+  # Job 1: compilar, testear y analizar el codigo
   build-test-security:
     runs-on: ubuntu-latest
 
@@ -17,7 +18,7 @@ jobs:
         working-directory: ProductosJSS
 
     steps:
-      - name: Checkout código
+      - name: Checkout del repositorio
         uses: actions/checkout@v4
 
       - name: Configurar Java 21
@@ -29,11 +30,101 @@ jobs:
       - name: Ejecutar pruebas unitarias
         run: mvn clean test
 
-      - name: Generar cobertura JaCoCo
+      - name: Reporte de cobertura con JaCoCo
         run: mvn jacoco:report
 
-      - name: Análisis SCA (Dependencias)
-        run: mvn dependency:tree
+      # Analisis estatico de seguridad (SAST) con SpotBugs
+      # Falla el pipeline si encuentra bugs de severidad alta
+      - name: Analisis SAST con SpotBugs
+        run: mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6:check -Dspotbugs.failOnError=true -Dspotbugs.threshold=High
 
-      - name: Empaquetar aplicación
+      # Escaneo de dependencias con Snyk (necesita el secret SNYK_TOKEN)
+      - name: Escaneo de dependencias con Snyk
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --file=ProductosJSS/pom.xml
+
+      # OWASP como segunda capa de analisis SCA, se deja en continue-on-error
+      # porque a veces el servidor NVD tarda mucho en responder
+      - name: Analisis de dependencias OWASP
+        run: mvn dependency-check:check
+        continue-on-error: true
+
+      - name: Empaquetar aplicacion
         run: mvn package -DskipTests
+
+      - name: Guardar el jar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: ProductosJSS/target/*.jar
+          retention-days: 1
+
+  # Job 2: construir la imagen Docker
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build-test-security
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Descargar el jar compilado
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: ProductosJSS/target/
+
+      - name: Construir imagen Docker
+        run: docker build -t productosjss:${{ github.sha }} ./ProductosJSS
+
+      - name: Verificar que la imagen existe
+        run: docker images productosjss
+
+  # Job 3: despliegue en entorno local simulado con Docker Compose
+  # Solo se ejecuta cuando hay push a main, no en pull requests
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      # Crear el .env con los secrets configurados en GitHub
+      - name: Crear archivo .env
+        run: |
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+          echo "MYSQL_ROOT_USERNAME=root" >> .env
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
+      - name: Levantar stack con Docker Compose
+        run: docker compose up --build -d
+
+      # Verificar que la app levanto correctamente haciendo un health check
+      - name: Verificar que la app responde
+        run: |
+          echo "Esperando que el servicio levante..."
+          for i in $(seq 1 12); do
+            if curl -sf http://localhost:8081/actuator/health; then
+              echo "La app respondio correctamente"
+              exit 0
+            fi
+            echo "Intento $i de 12, esperando..."
+            sleep 10
+          done
+          echo "La app no respondio en el tiempo esperado"
+          docker compose logs
+          exit 1
+
+      - name: Ver logs del despliegue
+        if: always()
+        run: docker compose logs --tail=50
+
+      - name: Bajar el stack
+        if: always()
+        run: docker compose down -v

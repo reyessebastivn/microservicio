@@ -1,83 +1,171 @@
-Microservicio de Productos
+# Microservicio ProductosJSS
 
-Este proyecto corresponde a un microservicio desarrollado en Java con Spring Boot, el cual permite gestionar productos, usuarios y órdenes.
+Este proyecto es un microservicio desarrollado con Spring Boot y Java 21 que permite gestionar productos, categorías, usuarios y órdenes de compra. Fue desarrollado como base para el trabajo de DevOps e incluye autenticación con JWT, documentación de API con Swagger, pruebas unitarias y un pipeline de CI/CD con GitHub Actions.
 
-El objetivo de este trabajo fue aplicar conceptos de control de versiones y prácticas DevOps utilizando GitHub, GitHub Actions, Docker y herramientas de calidad de software.
+---
 
-  Para este proyecto se utilizó el modelo GitFlow.
-  
-  Las ramas utilizadas fueron:
+## Cómo levantar el proyecto localmente
 
-  * main: contiene la versión estable del proyecto.
-  * develop: rama donde se integran los cambios en desarrollo.
-  * feature/: utilizada para implementar nuevas funcionalidades.
-  * hotfix/: utilizada para corregir errores importantes.
+Para correr el proyecto necesitas tener Docker Desktop instalado.
 
-Decidí usar GitFlow porque permite organizar mejor el trabajo, separar los cambios y evitar errores en la versión principal.
+### Pasos
 
-El flujo que se siguió fue el siguiente:
+**1. Clonar el repositorio**
 
-1. Se creó la rama develop desde main.
-2. Se crearon ramas feature desde develop para agregar nuevas funcionalidades.
-3. Cada cambio se subió mediante commits y luego se hizo un Pull Request hacia develop.
-4. Para corregir un error, se creó una rama hotfix desde main.
-5. El hotfix fue integrado nuevamente a main mediante un Pull Request.
-6. Durante el proceso se resolvieron conflictos de código manualmente.
+```bash
+git clone https://github.com/reyessebastivn/microservicio.git
+cd microservicio
+```
 
+**2. Crear el archivo de variables de entorno**
 
-  Nombres de ramas:
+El proyecto usa un archivo `.env` para las credenciales. Hay una plantilla lista para copiar:
 
-* feature/agregar-endpoint
-* feature/crear-producto
-* hotfix/error-productos
+```bash
+# En Linux/Mac:
+cp .env.example .env
 
-  Mensajes de commit
+# En Windows (PowerShell):
+Copy-Item .env.example .env
+```
 
-* feat: para nuevas funcionalidades.
-* fix: para correcciones de errores.
-* docs: para documentación.
-* ci: para cambios relacionados con integración continua.
+Los valores por defecto que vienen en `.env.example` funcionan para desarrollo local, no es necesario cambiarlos.
 
-Durante el desarrollo se realizaron:
+**3. Levantar el stack**
 
-- 2 ramas feature para simular nuevas funcionalidades.
-- 1 rama hotfix para corregir un error.
-- Uso de Pull Requests para integrar cambios.
-- Resolución de conflictos en el código.
-- Implementación de pruebas unitarias con JUnit y Mockito.
-- Generación de reportes de cobertura utilizando JaCoCo.
-- Configuración de Docker para contenedorización del microservicio.
-- Configuración de Docker Compose para facilitar la ejecución del proyecto.
-- Automatización de tareas mediante GitHub Actions.
+```bash
+docker compose up --build
+```
 
-Esto permitió simular un trabajo colaborativo y aplicar prácticas básicas de DevOps.
+Esto levanta dos contenedores: la base de datos MySQL y la aplicación Spring Boot.
 
-  GitHub Actions
-  Se configuró un flujo básico de integración continua que se ejecuta automáticamente cuando:
-  
-  -Se realiza un push a la rama main.
-  -Se crea o actualiza un Pull Request.
+| Servicio | Dirección |
+|----------|-----------|
+| API REST | http://localhost:8081 |
+| Swagger UI | http://localhost:8081/swagger-ui.html |
+| MySQL | localhost:3307 |
 
-  El pipeline realiza las siguientes tareas:
-  
-  -Compilación del proyecto.
-  -Ejecución de pruebas unitarias.
-  -Generación de cobertura de código con JaCoCo.
-  -Revisión de dependencias.
-  -Empaquetado de la aplicación.
-  
-  Esto ayuda a verificar que los cambios se integren correctamente antes de ser publicados.
+Para detener todo:
 
-Cobertura de pruebas
-  Se utilizó JaCoCo para generar reportes de cobertura de código a partir de las pruebas unitarias realizadas.
-  La cobertura se genera automáticamente tanto de forma local como dentro del pipeline de GitHub Actions.
+```bash
+docker compose down
+```
 
- Docker
-  El proyecto fue preparado para ejecutarse mediante contenedores Docker.
-  Además, se incorporó Docker Compose para simplificar la ejecución de los servicios necesarios para el proyecto.
+Si también quieres borrar los datos guardados en el volumen:
 
-Conclusión
-Este trabajo me permitió entender mejor cómo funciona Git en un entorno colaborativo, el uso de ramas, 
-la importancia de los Pull Requests y la automatización de procesos mediante herramientas DevOps.
-También permitió aplicar conceptos de integración continua, pruebas automatizadas, 
-cobertura de código y contenedorización de aplicaciones.
+```bash
+docker compose down -v
+```
+
+---
+
+## Estructura del proyecto
+
+```
+microservicio/
+├── .github/
+│   ├── workflows/ci.yml      # Pipeline de GitHub Actions
+│   └── dependabot.yml        # Actualizacion automatica de dependencias
+├── .env.example              # Plantilla de variables de entorno
+├── docker-compose.yml        # Orquestacion del stack
+└── ProductosJSS/
+    ├── Dockerfile            # Imagen del microservicio
+    ├── pom.xml               # Dependencias Maven
+    └── src/
+        ├── main/java/        # Codigo fuente
+        └── test/java/        # Pruebas unitarias
+```
+
+El `docker-compose.yml` incluye redes personalizadas, volúmenes persistentes, variables de entorno, healthchecks y dependencias entre servicios.
+
+---
+
+## Pipeline CI/CD
+
+El pipeline se ejecuta automáticamente con cada push o pull request a `main` y está dividido en 3 etapas que corren en orden:
+
+### Etapa 1: Build, pruebas y análisis de seguridad
+
+- Se compila el proyecto y se ejecutan las pruebas unitarias con JUnit
+- Se genera el reporte de cobertura con JaCoCo
+- Se hace análisis estático del código con SpotBugs (SAST) — bloquea si encuentra bugs de severidad alta
+- Se escanean las dependencias con Snyk (SCA) — bloquea si encuentra vulnerabilidades altas
+- Se hace un análisis adicional con OWASP Dependency Check
+- Se empaqueta el `.jar` y se guarda como artefacto
+
+### Etapa 2: Construcción de imagen Docker
+
+- Descarga el `.jar` de la etapa anterior
+- Construye la imagen Docker usando el Dockerfile del proyecto
+- Verifica que la imagen fue creada correctamente
+
+### Etapa 3: Despliegue en entorno simulado (solo en push a main)
+
+- Crea el archivo `.env` desde los secrets configurados en GitHub
+- Levanta el stack completo con `docker compose up --build -d`
+- Hace un health check para confirmar que la app responde correctamente
+- Muestra los logs y baja el stack al terminar
+
+### Cómo garantizamos la trazabilidad y calidad
+
+Cada ejecución del pipeline queda registrada en GitHub Actions vinculada al commit exacto que la disparó. Cualquier cambio en el código pasa obligatoriamente por pruebas, análisis de seguridad y construcción de imagen antes de llegar al despliegue. Si alguna de las etapas falla, las siguientes no se ejecutan.
+
+Las herramientas de seguridad (Snyk y SpotBugs) están configuradas para bloquear el pipeline cuando detectan problemas de severidad alta, evitando que código vulnerable llegue al despliegue. Además, Dependabot revisa semanalmente las dependencias del proyecto y abre pull requests automáticos cuando hay actualizaciones disponibles.
+
+### Secrets necesarios en GitHub
+
+Para que el pipeline funcione hay que configurar estos secrets en **Settings → Secrets and variables → Actions**:
+
+| Secret | Para qué sirve |
+|--------|----------------|
+| `SNYK_TOKEN` | Token de Snyk (se obtiene gratis en app.snyk.io) |
+| `MYSQL_ROOT_PASSWORD` | Contraseña de MySQL para el entorno de CI |
+| `MYSQL_DATABASE` | Nombre de la base de datos |
+| `JWT_SECRET` | Clave para firmar los tokens JWT |
+
+---
+
+## Pruebas unitarias
+
+Las pruebas están en `src/test/java/` y cubren los servicios principales de la aplicación:
+
+- `ProductoServiceTest`
+- `CategoriaServiceTest`
+- `UsuarioServiceTest`
+
+Para ejecutarlas localmente:
+
+```bash
+cd ProductosJSS
+mvn clean test
+```
+
+---
+
+## Seguridad
+
+- La autenticación usa tokens JWT firmados con una clave secreta
+- Las contraseñas se almacenan hasheadas con BCrypt
+- Las dependencias se escanean automáticamente en cada ejecución del pipeline
+
+---
+
+## Flujo de trabajo con Git (GitFlow)
+
+Se usó GitFlow como estrategia de ramas:
+
+- `main` → versión estable
+- `develop` → integración de cambios
+- `feature/*` → nuevas funcionalidades
+- `hotfix/*` → correcciones urgentes
+
+---
+
+## Variables de entorno
+
+| Variable | Descripción |
+|----------|-------------|
+| `MYSQL_ROOT_PASSWORD` | Contraseña de MySQL |
+| `MYSQL_ROOT_USERNAME` | Usuario de MySQL (default: root) |
+| `MYSQL_DATABASE` | Nombre de la base de datos (default: basejoyas) |
+| `JWT_SECRET` | Clave secreta para JWT |

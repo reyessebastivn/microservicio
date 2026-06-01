@@ -1,0 +1,17 @@
+# Variables de entorno — nunca subir al repositorio
+.env
+
+# Carpetas de compilación Java/Maven
+target/
+
+# Reportes generados localmente
+**/dependency-check-report*
+**/spotbugsXml.xml
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# macOS
+.DS_Store
