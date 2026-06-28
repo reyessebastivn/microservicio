@@ -169,3 +169,55 @@ Se usó GitFlow como estrategia de ramas:
 | `MYSQL_ROOT_USERNAME` | Usuario de MySQL (default: root) |
 | `MYSQL_DATABASE` | Nombre de la base de datos (default: basejoyas) |
 | `JWT_SECRET` | Clave secreta para JWT |
+
+---
+
+## Entrega N°3: Monitoreo, Cumplimiento y Calidad de Código
+
+Este apartado describe la integración de las herramientas de monitoreo (Prometheus y Grafana), herramientas de calidad/cumplimiento (SonarCloud, Snyk y auditoría personalizada) y cómo estas herramientas forman parte del pipeline de CI/CD.
+
+### 1. Arquitectura de Monitoreo (Prometheus y Grafana)
+
+Hemos configurado un stack de monitoreo autocontenido y orquestado mediante Docker Compose para visualizar el estado, rendimiento y disponibilidad de la aplicación en tiempo real:
+
+* **Spring Boot Actuator:** El microservicio exporta métricas en el formato nativo de Prometheus a través del endpoint público `/actuator/prometheus`, configurado con las dependencias de Micrometer.
+* **Prometheus:** Recolecta las métricas de la aplicación cada 15 segundos y las almacena de forma temporal.
+* **Grafana:** Se conecta a Prometheus como origen de datos y visualiza la información en un panel interactivo preconfigurado.
+
+#### Métricas clave del Dashboard:
+* **Uso de Recursos (CPU y Memoria JVM):** Permite detectar fugas de memoria o saturación del procesador, ayudando a decidir si el servicio necesita escalamiento horizontal (más instancias) o vertical (más recursos).
+* **Tasa de Errores HTTP (2xx, 4xx, 5xx):** Monitorea la estabilidad de los endpoints. Un pico en los errores 5xx indica fallas internas críticas que requieren inspección inmediata en el código o en la base de datos.
+* **Tiempo de Actividad (Uptime):** Indica la disponibilidad del servicio. Reinicios no planificados o caídas de uptime alertan sobre inestabilidad de la aplicación.
+* **Volumen de Tráfico (Throughput):** Registra el total de solicitudes procesadas para entender la carga real del sistema.
+
+---
+
+### 2. Políticas de Cumplimiento Técnico y Calidad
+
+Para asegurar la robustez, seguridad y cumplimiento del código, se implementan tres niveles de calidad automatizados en el pipeline de CI/CD:
+
+1. **Auditoría de Cumplimiento Técnico (`audit-compliance.sh`):**
+   * Un script que se ejecuta al inicio del pipeline para verificar la higiene de Git.
+   * Valida que no existan archivos con secretos o contraseñas expuestas en texto plano y confirma que el archivo `.env` esté debidamente ignorado en `.gitignore`.
+2. **Análisis de Vulnerabilidades (Snyk - SCA):**
+   * Escanea las dependencias de Maven. Si detecta alguna librería externa con vulnerabilidades críticas o de severidad alta, el pipeline se detiene de inmediato.
+3. **Análisis de Calidad Estática (SonarCloud):**
+   * Evalúa la calidad interna del software: porcentaje de cobertura de pruebas unitarias (JaCoCo), duplicación de código, bugs potenciales y deudas técnicas.
+   * Integrado en la fase de construcción de GitHub Actions.
+
+---
+
+### 3. Evidencia de Ejecución Local y Accesos
+
+#### Direcciones Locales de los Servicios:
+* **API del Microservicio:** http://localhost:8081
+* **Swagger UI:** http://localhost:8081/swagger-ui.html
+* **Métricas Actuator:** http://localhost:8081/actuator/prometheus
+* **Prometheus UI:** http://localhost:9090
+* **Grafana Dashboard:** http://localhost:3000
+  * **Credenciales de Grafana:** Usuario: `admin` | Contraseña: `admin` (la primera vez te solicitará cambiarla, puedes omitirlo). El dashboard titulado *"Dashboard de Monitoreo - ProductosJSS"* se carga automáticamente.
+
+#### Nuevos Secrets Necesarios en GitHub:
+Para habilitar el análisis en la nube de SonarCloud, debes agregar este secret en tu repositorio:
+* `SONAR_TOKEN`: Token generado desde tu cuenta de SonarCloud para el proyecto.
+

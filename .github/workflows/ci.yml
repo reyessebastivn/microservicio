@@ -27,11 +27,27 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Ejecutar auditoría de cumplimiento técnico
+        run: bash ../scripts/audit-compliance.sh
+
       - name: Ejecutar pruebas unitarias
         run: mvn clean test
 
       - name: Reporte de cobertura con JaCoCo
         run: mvn jacoco:report
+
+      - name: Cache de paquetes de SonarCloud
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Analizar con SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=reyessebastivn_microservicio -Dsonar.organization=reyessebastivn
 
       # Analisis estatico de seguridad (SAST) con SpotBugs
       # Falla el pipeline si encuentra bugs de severidad alta
