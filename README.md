@@ -231,7 +231,7 @@ A continuación se presentan las capturas de pantalla de la implementación y co
 
 ##### Estado de Contenedores (Docker Compose)
 Muestra el correcto funcionamiento de los servicios orquestados localmente.
-![Orquestación Docker](img/orquestacion_docker.png)
+![Orquestación Docker](img/Orquetacion_docker.png)
 
 ##### Consola de Prometheus (Scrape Target en estado UP)
 Evidencia que Prometheus se conecta exitosamente al microservicio Spring Boot.
@@ -253,15 +253,15 @@ Visualización gráfica de las métricas recolectadas del sistema en tiempo real
 ##### Generación de Tráfico (Swagger UI)
 Consumo interactivo de los endpoints del microservicio.
 * **Llamada de Prueba:**
-  ![Swagger Preparación](img/swagger_preparacion.png)
+  ![Swagger Preparación](img/swagger_ejecucion.png)
 * **Respuesta Exitosa del Servidor:**
-  ![Swagger Respuesta Exitosa](img/swagger_respuesta_exitosa.png)
+  ![Swagger Respuesta Exitosa](img/swagger_respuesta.png)
 
 #### Políticas de Cumplimiento Técnico (IE5)
 
 ##### Script de Auditoría de Seguridad Local (PowerShell)
 Demostración de la validación del repositorio local previa a un push.
-![Auditoría Local](img/auditoria_local.png)
+![Auditoría Local](img/Auditoria_Local.png)
 
 
 
