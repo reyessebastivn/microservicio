@@ -13,7 +13,7 @@ FAIL=0
 
 # 1. Verificar que .env esté en .gitignore
 echo "[AUDIT] 1. Verificando que .env esté en .gitignore..."
-if grep -q "^\.env$" .gitignore 2>/dev/null; then
+if tr -d '\r' < .gitignore 2>/dev/null | grep -q "^\.env$"; then
     echo "  [OK] .env está correctamente configurado en .gitignore."
 else
     echo "  [FAIL] .env no se encuentra en .gitignore!"
