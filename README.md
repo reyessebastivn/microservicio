@@ -221,3 +221,55 @@ Para asegurar la robustez, seguridad y cumplimiento del código, se implementan 
 Para habilitar el análisis en la nube de SonarCloud, debes agregar este secret en tu repositorio:
 * `SONAR_TOKEN`: Token generado desde tu cuenta de SonarCloud para el proyecto.
 
+---
+
+### 4. Galería de Evidencias de la Entrega N°3
+
+A continuación se presentan las capturas de pantalla de la implementación y correcto funcionamiento de todas las herramientas requeridas para el hito:
+
+#### Observabilidad y Monitoreo (IE1 & IE3)
+
+##### Estado de Contenedores (Docker Compose)
+Muestra el correcto funcionamiento de los servicios orquestados localmente.
+![Orquestación Docker](img/orquestacion_docker.png)
+
+##### Consola de Prometheus (Scrape Target en estado UP)
+Evidencia que Prometheus se conecta exitosamente al microservicio Spring Boot.
+![Prometheus Targets](img/prometheus_targets.png)
+
+##### Respuestas y Métricas Crudas (Actuator)
+Demostración de los endpoints de salud y métricas de Spring Boot.
+* **Salud del Microservicio (`/actuator/health`):**
+  ![Salud del Microservicio](img/salud_microservicio.png)
+* **Feed de Métricas en Formato Prometheus (`/actuator/prometheus`):**
+  ![Métricas Prometheus](img/metricas_prometheus.png)
+
+##### Consumo y Rendimiento en Tiempo Real (Grafana)
+Visualización gráfica de las métricas recolectadas del sistema en tiempo real.
+![Panel de Grafana](img/panel_grafana.png)
+
+#### Pruebas y Consumo de la API (IE3)
+
+##### Generación de Tráfico (Swagger UI)
+Consumo interactivo de los endpoints del microservicio.
+* **Llamada de Prueba:**
+  ![Swagger Preparación](img/swagger_preparacion.png)
+* **Respuesta Exitosa del Servidor:**
+  ![Swagger Respuesta Exitosa](img/swagger_respuesta_exitosa.png)
+
+#### Políticas de Cumplimiento Técnico (IE5)
+
+##### Script de Auditoría de Seguridad Local (PowerShell)
+Demostración de la validación del repositorio local previa a un push.
+![Auditoría Local](img/auditoria_local.png)
+
+#### Pipeline de CI/CD (IE4 & IE6)
+
+##### Ejecución Exitosa del Pipeline
+Validación completa en verde de todo el proceso de compilación, calidad y pruebas en GitHub Actions.
+![Pipeline Exitoso](img/pipeline_exitoso.png)
+
+##### Detención del Pipeline ante Fallas Críticas (Simulación)
+Demostración del pipeline abortado automáticamente por la auditoría o análisis ante un fallo de cumplimiento.
+![Pipeline Fallido](img/pipeline_fallido.png)
+
