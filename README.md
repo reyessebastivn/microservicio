@@ -263,13 +263,5 @@ Consumo interactivo de los endpoints del microservicio.
 Demostración de la validación del repositorio local previa a un push.
 ![Auditoría Local](img/auditoria_local.png)
 
-#### Pipeline de CI/CD (IE4 & IE6)
 
-##### Ejecución Exitosa del Pipeline
-Validación completa en verde de todo el proceso de compilación, calidad y pruebas en GitHub Actions.
-![Pipeline Exitoso](img/pipeline_exitoso.png)
-
-##### Detención del Pipeline ante Fallas Críticas (Simulación)
-Demostración del pipeline abortado automáticamente por la auditoría o análisis ante un fallo de cumplimiento.
-![Pipeline Fallido](img/pipeline_fallido.png)
 
