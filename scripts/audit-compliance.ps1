@@ -7,6 +7,12 @@ Write-Host "====================================================" -ForegroundCol
 Write-Host "       INICIO DE AUDITORÍA DE CUMPLIMIENTO (WINDOWS)" -ForegroundColor Cyan
 Write-Host "====================================================" -ForegroundColor Cyan
 
+# Navegar a la raíz del repositorio Git
+$gitRoot = git rev-parse --show-toplevel
+if ($gitRoot) {
+    Set-Location $gitRoot
+}
+
 $fail = $false
 
 # 1. Verificar .env en .gitignore

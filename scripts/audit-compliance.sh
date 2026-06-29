@@ -9,6 +9,9 @@ echo "===================================================="
 echo "       INICIO DE AUDITORÍA DE CUMPLIMIENTO          "
 echo "===================================================="
 
+# Navegar a la raíz del repositorio Git para asegurar el contexto correcto
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
 FAIL=0
 
 # 1. Verificar que .env esté en .gitignore
