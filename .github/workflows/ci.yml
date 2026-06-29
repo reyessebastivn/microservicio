@@ -52,7 +52,7 @@ jobs:
       # Analisis estatico de seguridad (SAST) con SpotBugs
       # Falla el pipeline si encuentra bugs de severidad alta
       - name: Analisis SAST con SpotBugs
-        run: mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6:check -Dspotbugs.failOnError=true -Dspotbugs.threshold=High
+        run: mvn com.github.spotbugs:spotbugs-maven-plugin:4.8.6.0:check -Dspotbugs.failOnError=true -Dspotbugs.threshold=High
 
       # Escaneo de dependencias con Snyk (necesita el secret SNYK_TOKEN)
       - name: Escaneo de dependencias con Snyk
