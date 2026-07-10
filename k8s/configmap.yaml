@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-db:3306/basejoyas?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Santiago"
+  SPRING_DATASOURCE_USERNAME: "root"

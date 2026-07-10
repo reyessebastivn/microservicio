@@ -6,7 +6,8 @@ WORKDIR /app
 COPY . .
 
 RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean test
+RUN ./mvnw package -DskipTests
 
 # ── Etapa 2: Imagen de ejecución (más liviana) ───────────────
 FROM eclipse-temurin:21-jre

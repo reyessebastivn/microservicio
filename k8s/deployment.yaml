@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productosjss-app
+  labels:
+    app: productosjss-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: productosjss-app
+  template:
+    metadata:
+      labels:
+        app: productosjss-app
+    spec:
+      containers:
+        - name: productosjss
+          image: reyessebastivn/productosjss:latest
+          ports:
+            - containerPort: 8081
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: database-root-password
+            - name: MYSQL_ROOT_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SPRING_DATASOURCE_USERNAME
+            - name: MYSQL_DATABASE
+              value: basejoyas
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: jwt-secret
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SPRING_DATASOURCE_URL
+            - name: MANAGEMENT_CLOUDWATCH_METRICS_EXPORT_ENABLED
+              value: "true"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 10

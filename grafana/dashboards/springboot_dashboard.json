@@ -327,19 +327,164 @@
       }
     },
     {
-      "collapsed": false,
+      "id": 7,
+      "title": "Cobertura de Código (SonarCloud / JaCoCo)",
+      "type": "gauge",
       "gridPos": {
         "h": 6,
-        "w": 24,
+        "w": 8,
         "x": 0,
         "y": 11
       },
-      "id": 7,
-      "title": "Métricas de Control de Calidad y Entregas (SonarCloud & Pipelines)",
-      "type": "text",
-      "options": {
-        "content": "### 📋 Control de Cumplimiento Técnico (QA / QC)\n\nEsta sección complementa el dashboard con las métricas estáticas del proyecto obtenidas desde las herramientas del pipeline de CI/CD:\n\n* **Cobertura de Pruebas Unitarias (JaCoCo):** >80% (Visualizada en el panel de control de SonarCloud).\n* **Análisis de Vulnerabilidades (Snyk / SCA):** Monitoreo de dependencias de Maven contra vulnerabilidades conocidas.\n* **Análisis de Calidad Estática (SonarCloud):** Reporte interactivo de bugs, code smells y mantenibilidad disponible en [SonarCloud Portal](https://sonarcloud.io).\n* **Tiempo de Despliegue (CI/CD):** Medido a través de la duración de la ejecución en GitHub Actions (tiempo promedio de despliegue local: ~35 segundos).\n\n*Nota: Las métricas de calidad estática y seguridad son calculadas en cada integración (Push/PR) y publicadas en las respectivas plataformas externas autorizadas.*",
-        "mode": "markdown"
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "cicd_sonar_coverage",
+          "legendFormat": "Cobertura",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Duración de Pipeline CI/CD",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "cicd_build_duration_seconds",
+          "legendFormat": "Duración",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 60
+              },
+              {
+                "color": "red",
+                "value": 120
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Bugs y Vulnerabilidades Detectados",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 11
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "Prometheus"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "cicd_sonar_bugs",
+          "legendFormat": "Bugs",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "editorMode": "code",
+          "expr": "cicd_sonar_vulnerabilities",
+          "legendFormat": "Vulnerabilidades",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        }
       }
     }
   ],

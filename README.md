@@ -172,69 +172,89 @@ Se usó GitFlow como estrategia de ramas:
 
 ---
 
-## Entrega N°3: Monitoreo, Cumplimiento y Calidad de Código
+## Entrega Final: Monitoreo, Calidad de Código, Despliegue en Kubernetes y DevOps
 
-Este apartado describe la integración de las herramientas de monitoreo (Prometheus y Grafana), herramientas de calidad/cumplimiento (SonarCloud, Snyk y auditoría personalizada) y cómo estas herramientas forman parte del pipeline de CI/CD.
+Este apartado detalla la integración final de la infraestructura y el pipeline de CI/CD, abarcando observabilidad, cumplimiento técnico, análisis estático, seguridad y el flujo de despliegue seguro.
 
-### 1. Arquitectura de Monitoreo (Prometheus y Grafana)
+---
 
-Hemos configurado un stack de monitoreo autocontenido y orquestado mediante Docker Compose para visualizar el estado, rendimiento y disponibilidad de la aplicación en tiempo real:
+### 1. Arquitectura de Monitoreo (Prometheus, Grafana y Pushgateway)
 
-* **Spring Boot Actuator:** El microservicio exporta métricas en el formato nativo de Prometheus a través del endpoint público `/actuator/prometheus`, configurado con las dependencias de Micrometer.
-* **Prometheus:** Recolecta las métricas de la aplicación cada 15 segundos y las almacena de forma temporal.
-* **Grafana:** Se conecta a Prometheus como origen de datos y visualiza la información en un panel interactivo preconfigurado.
+Hemos configurado un stack de monitoreo autocontenido y orquestado mediante Docker Compose para visualizar el estado del microservicio y los resultados del pipeline de CI/CD en tiempo real:
+
+* **Spring Boot Actuator:** El microservicio exporta métricas a través del endpoint `/actuator/prometheus` usando Micrometer.
+* **Prometheus:** Recolecta métricas de la aplicación cada 15 segundos y además recibe métricas del pipeline enviadas a través de Pushgateway.
+* **Pushgateway:** Actúa como punto de recepción para trabajos efímeros (como las ejecuciones de GitHub Actions), permitiendo registrar métricas del ciclo de vida del software.
+* **Grafana:** Visualiza toda la información en un panel interactivo preconfigurado, conectado a Prometheus como origen de datos.
 
 #### Métricas clave del Dashboard:
-* **Uso de Recursos (CPU y Memoria JVM):** Permite detectar fugas de memoria o saturación del procesador, ayudando a decidir si el servicio necesita escalamiento horizontal (más instancias) o vertical (más recursos).
-* **Tasa de Errores HTTP (2xx, 4xx, 5xx):** Monitorea la estabilidad de los endpoints. Un pico en los errores 5xx indica fallas internas críticas que requieren inspección inmediata en el código o en la base de datos.
-* **Tiempo de Actividad (Uptime):** Indica la disponibilidad del servicio. Reinicios no planificados o caídas de uptime alertan sobre inestabilidad de la aplicación.
-* **Volumen de Tráfico (Throughput):** Registra el total de solicitudes procesadas para entender la carga real del sistema.
+* **Uso de Recursos (CPU y Memoria JVM):** Permite detectar fugas de memoria o saturación del procesador.
+* **Tasa de Errores HTTP (2xx, 4xx, 5xx) y Rendimiento (Throughput):** Monitorea la estabilidad de los endpoints y el volumen de tráfico.
+* **Métricas de CI/CD y Calidad de Código (Gauges en Vivo):** 
+  - **Cobertura de Código (cicd_sonar_coverage):** Muestra el porcentaje de líneas cubiertas por pruebas unitarias (obtenido del reporte de JaCoCo en el pipeline).
+  - **Duración del Pipeline (cicd_build_duration_seconds):** Registra el tiempo exacto que tardó el build y testeo en GitHub Actions.
+  - **Estado del Pipeline y Hallazgos:** Registra si la ejecución fue exitosa y los bugs/vulnerabilidades detectados.
 
 ---
 
-### 2. Políticas de Cumplimiento Técnico y Calidad
+### 2. Políticas de Seguridad, Calidad y Puertas de Enlace (Quality Gates)
 
-Para asegurar la robustez, seguridad y cumplimiento del código, se implementan tres niveles de calidad automatizados en el pipeline de CI/CD:
+Para asegurar la robustez del código y evitar despliegues inseguros, se implementan controles automatizados en el pipeline de CI/CD:
 
 1. **Auditoría de Cumplimiento Técnico (`audit-compliance.sh`):**
-   * Un script que se ejecuta al inicio del pipeline para verificar la higiene de Git.
-   * Valida que no existan archivos con secretos o contraseñas expuestas en texto plano y confirma que el archivo `.env` esté debidamente ignorado en `.gitignore`.
+   - Valida la higiene de Git (que el archivo `.env` esté debidamente ignorado en `.gitignore`) y realiza un escaneo de secretos buscando posibles credenciales hardcodeadas en código fuente.
 2. **Análisis de Vulnerabilidades (Snyk - SCA):**
-   * Escanea las dependencias de Maven. Si detecta alguna librería externa con vulnerabilidades críticas o de severidad alta, el pipeline se detiene de inmediato.
-3. **Análisis de Calidad Estática (SonarCloud):**
-   * Evalúa la calidad interna del software: porcentaje de cobertura de pruebas unitarias (JaCoCo), duplicación de código, bugs potenciales y deudas técnicas.
-   * Integrado en la fase de construcción de GitHub Actions.
+   - Escanea las dependencias del proyecto. Si detecta librerías con vulnerabilidades de severidad alta, el pipeline se detiene inmediatamente. Se ejecuta de manera condicional asegurando que opere como gate bloqueante.
+3. **Análisis estático de seguridad (SpotBugs - SAST):**
+   - Analiza el código en busca de bugs de seguridad. Está configurado para interrumpir el build (`failOnError=true` en umbral High) ante fallos críticos.
+4. **Análisis de Calidad Estática y Quality Gate (SonarCloud):**
+   - Integrado en el pipeline con el parámetro `-Dsonar.qualitygate.wait=true`. Esto obliga al pipeline a esperar los resultados de SonarCloud y abortar el flujo de despliegue si el proyecto no supera los límites de calidad establecidos (cobertura, código duplicado o bugs).
 
 ---
 
-### 3. Evidencia de Ejecución Local y Accesos
+### 3. Práctica de Despliegue Seguro en Kubernetes e Istio
 
-#### Direcciones Locales de los Servicios:
-* **API del Microservicio:** http://localhost:8081
-* **Swagger UI:** http://localhost:8081/swagger-ui.html
-* **Métricas Actuator:** http://localhost:8081/actuator/prometheus
-* **Prometheus UI:** http://localhost:9090
-* **Grafana Dashboard:** http://localhost:3000
-  * **Credenciales de Grafana:** Usuario: `admin` | Contraseña: `admin` (la primera vez te solicitará cambiarla, puedes omitirlo). El dashboard titulado *"Dashboard de Monitoreo - ProductosJSS"* se carga automáticamente.
+El pipeline de despliegue continuo simula un entorno de producción seguro utilizando tecnologías cloud-native:
 
-#### Nuevos Secrets Necesarios en GitHub:
-Para habilitar el análisis en la nube de SonarCloud, debes agregar este secret en tu repositorio:
-* `SONAR_TOKEN`: Token generado desde tu cuenta de SonarCloud para el proyecto.
+* **Kubernetes (Orquestación):**
+  - Manifiestos listos en la carpeta `k8s/` que declaran un deployment (`deployment.yaml`) para la aplicación con 2 réplicas, un despliegue de base de datos (`db-deployment.yaml`), configmaps y secrets cifrados para separar la configuración del código.
+  - Incluye probes de disponibilidad (`readinessProbe`) y salud (`livenessProbe`) que apuntan a Spring Boot Actuator para autorizar el tráfico de red solo a instancias completamente inicializadas.
+* **Istio (Redes y Malla de Servicios):**
+  - Declaración de reglas de Istio (`istio.yaml`) mediante componentes como `Gateway` (para control de tráfico de entrada por puerto 80), `VirtualService` (para enrutamiento dinámico hacia el servicio interno) y `DestinationRule` (para balanceo de carga round-robin).
+* **AWS CloudWatch (Métricas Cloud):**
+  - Integración nativa a través del paquete `micrometer-registry-cloudwatch2`. Las propiedades están configuradas de forma condicional para activarse únicamente en producción, evitando errores de inicialización en desarrollo local.
+* **Pruebas de Aceptación como Gate de Producción (`acceptance-tests.sh`):**
+  - Script que simula la interacción del usuario realizando llamadas automatizadas a endpoints públicos y de diagnóstico en el clúster desplegado. Si alguna de estas pruebas falla, el despliegue es rechazado.
+* **Políticas de Aprobación en GitHub (Environments):**
+  - El deployment está mapeado al entorno `production` en GitHub, lo que requiere aprobaciones y revisiones manuales obligatorias por parte de los administradores antes de proceder con la ejecución del job de despliegue en Kubernetes.
 
 ---
 
-### 4. Galería de Evidencias de la Entrega N°3
+### 4. Instrucciones para Ejecución Local y Simulación en CI/CD
 
-A continuación se presentan las capturas de pantalla de la implementación y correcto funcionamiento de todas las herramientas requeridas para el hito:
+#### Levantar el Entorno de Monitoreo Local:
+1. Copiar `.env.example` a `.env` y configurar los valores.
+2. Iniciar el stack completo:
+   ```bash
+   docker compose up --build -d
+   ```
+3. Acceso a las interfaces:
+   - **Microservicio:** http://localhost:8081
+   - **Prometheus:** http://localhost:9090
+   - **Pushgateway:** http://localhost:9091
+   - **Grafana Dashboard:** http://localhost:3000 (Credenciales: `admin`/`admin`).
 
-#### Observabilidad y Monitoreo (IE1 & IE3)
+#### Simulación del Flujo de CI/CD Completo (KinD):
+El clúster de Kubernetes se crea automáticamente en el runner de GitHub Actions utilizando **KinD (Kubernetes in Docker)**. Este flujo levanta el stack de monitoreo, despliega los recursos de Kubernetes e Istio, realiza las pruebas de aceptación y notifica el resultado al Pushgateway de forma transparente.
 
-##### Estado de Contenedores (Docker Compose)
-Muestra el correcto funcionamiento de los servicios orquestados localmente.
-![Orquestación Docker](img/Orquetacion_docker.png)
+---
 
-##### Consola de Prometheus (Scrape Target en estado UP)
-Evidencia que Prometheus se conecta exitosamente al microservicio Spring Boot.
+### 5. Evidencias de Ejecución Local e Integración
+
+#### Observabilidad y Monitoreo
+
+##### Consola de Prometheus (Scrape Targets en estado UP)
+Evidencia que Prometheus se conecta exitosamente al microservicio Spring Boot y al Pushgateway de CI/CD.
 ![Prometheus Targets](img/prometheus_targets.png)
 
 ##### Respuestas y Métricas Crudas (Actuator)
@@ -244,20 +264,11 @@ Demostración de los endpoints de salud y métricas de Spring Boot.
 * **Feed de Métricas en Formato Prometheus (`/actuator/prometheus`):**
   ![Métricas Prometheus](img/metricas_prometheus.png)
 
-##### Consumo y Rendimiento en Tiempo Real (Grafana)
-Visualización gráfica de las métricas recolectadas del sistema en tiempo real.
+##### Consumo y Rendimiento en Tiempo Real (Grafana con métricas de CI/CD)
+Visualización gráfica de las métricas recolectadas del sistema y las estadísticas reales del pipeline de CI/CD en tiempo real.
 ![Panel de Grafana](img/panel_grafana.png)
 
-#### Pruebas y Consumo de la API (IE3)
-
-##### Generación de Tráfico (Swagger UI)
-Consumo interactivo de los endpoints del microservicio.
-* **Llamada de Prueba:**
-  ![Swagger Preparación](img/swagger_ejecucion.png)
-* **Respuesta Exitosa del Servidor:**
-  ![Swagger Respuesta Exitosa](img/swagger_respuesta.png)
-
-#### Políticas de Cumplimiento Técnico (IE5)
+#### Políticas de Cumplimiento Técnico
 
 ##### Script de Auditoría de Seguridad Local (PowerShell)
 Demostración de la validación del repositorio local previa a un push.
