@@ -242,7 +242,7 @@ El pipeline de despliegue continuo simula un entorno de producción seguro utili
    - **Microservicio:** http://localhost:8081
    - **Prometheus:** http://localhost:9090
    - **Pushgateway:** http://localhost:9091
-   - **Grafana Dashboard:** http://localhost:3000 (Credenciales: `admin`/`admin`).
+   - **Grafana Dashboard:** http://localhost:3000 (Credenciales: `admin`/`admin123`).
 
 #### Simulación del Flujo de CI/CD Completo (KinD):
 El clúster de Kubernetes se crea automáticamente en el runner de GitHub Actions utilizando **KinD (Kubernetes in Docker)**. Este flujo levanta el stack de monitoreo, despliega los recursos de Kubernetes e Istio, realiza las pruebas de aceptación y notifica el resultado al Pushgateway de forma transparente.
